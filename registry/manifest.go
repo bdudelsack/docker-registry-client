@@ -40,6 +40,42 @@ func (registry *Registry) Manifest(repository, reference string) (*manifestV1.Si
 	return signedManifest, nil
 }
 
+func (registry *Registry) ManifestWithDigest(repository, reference string) (*manifestV1.SignedManifest, digest.Digest, error) {
+	url := registry.url("/v2/%s/manifests/%s", repository, reference)
+	registry.Logf("registry.manifest.get url=%s repository=%s reference=%s", url, repository, reference)
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, "", err
+	}
+
+	req.Header.Set("Accept", manifestV1.MediaTypeManifest)
+	resp, err := registry.Client.Do(req)
+	if err != nil {
+		return nil, "", err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, "", err
+	}
+
+	signedManifest := &manifestV1.SignedManifest{}
+	err = signedManifest.UnmarshalJSON(body)
+	if err != nil {
+		return nil, "", err
+	}
+
+	d, err := digest.ParseDigest(resp.Header.Get("Docker-Content-Digest"))
+
+	if err != nil {
+		return signedManifest, "", err
+	}
+
+	return signedManifest, d, nil
+}
+
 func (registry *Registry) ManifestV2(repository, reference string) (*manifestV2.DeserializedManifest, error) {
 	url := registry.url("/v2/%s/manifests/%s", repository, reference)
 	registry.Logf("registry.manifest.get url=%s repository=%s reference=%s", url, repository, reference)
