@@ -19,7 +19,7 @@ func (registry *Registry) Manifest(repository, reference string) (*manifestV1.Si
 		return nil, err
 	}
 
-	req.Header.Set("Accept", manifestV1.MediaTypeManifest)
+	req.Header.Set("Accept", manifestV1.MediaTypeSignedManifest)
 	resp, err := registry.Client.Do(req)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (registry *Registry) ManifestWithDigest(repository, reference string) (*man
 		return nil, "", err
 	}
 
-	req.Header.Set("Accept", manifestV1.MediaTypeManifest)
+	req.Header.Set("Accept", manifestV1.MediaTypeSignedManifest)
 	resp, err := registry.Client.Do(req)
 	if err != nil {
 		return nil, "", err
